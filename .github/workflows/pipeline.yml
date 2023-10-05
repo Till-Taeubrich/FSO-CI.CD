@@ -51,3 +51,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_BUMP: patch
+
+  discord_notification:
+    needs: [simple_deployment_pipeline]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Notify when health check succeeds
+        if: success() && github.event_name == 'push' && !contains(join(env.COMMIT_MESSAGE, ' '), '#skip')
+        uses: rjstone/discord-webhook-notify@89b0bf43c2c8514f70d0dcba4a706b904e8a3112
+        with:
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          severity: info 
+          text: Deployment succeeded
+      - name: Notify when health check fails
+        if: !success() && github.event_name == 'push' && !contains(join(env.COMMIT_MESSAGE, ' '), '#skip')
+        uses: rjstone/discord-webhook-notify@89b0bf43c2c8514f70d0dcba4a706b904e8a3112
+        with:
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          severity: error
+          text: Deployment failed 
