@@ -62,11 +62,11 @@ jobs:
         with:
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
           severity: info 
-          text: Deployment succeeded
+          text: Deployment succeeded.
       - name: Notify when health check fails
         if: failure() && github.event_name == 'push' && !contains(join(env.COMMIT_MESSAGE, ' '), '#skip')
         uses: rjstone/discord-webhook-notify@89b0bf43c2c8514f70d0dcba4a706b904e8a3112
         with:
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
           severity: error
-          text: Deployment failed 
+          text: Deployment failed.
