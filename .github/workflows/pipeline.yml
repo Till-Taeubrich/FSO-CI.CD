@@ -23,35 +23,40 @@ jobs:
           node-version: '16' #use node -v in terminal and insert version in quotes
       - name: Install dependencies 
         run: npm install  
+
       - name: Check style
         run: npm run eslint
+
       - name: Build
         run: npm run build
+
       - name: Test
         run: npm run test
+
       - name: E2E-tests
-        uses: cypress-io/github-action@v5
         with:
           command: npm run test:e2e
           start: npm run start-prod
           wait-on: http://localhost:5000 #add port of backend server
+        uses: cypress-io/github-action@v5
+
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --remote-only
-        #github.event_name == 'push' includes push AND merge events
         if: github.event_name == 'push' && !contains(join(env.COMMIT_MESSAGE, ' '), '#skip')
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - run: flyctl deploy --remote-only
+        #github.event_name == 'push' includes push AND merge events
 
-      - name: Notify when check succeeds
-        if: success()
+      - name: Notify when deployment succeeds
+        if: success() && github.event_name == 'push' && !contains(join(env.COMMIT_MESSAGE, ' '), '#skip')
         uses: rjstone/discord-webhook-notify@v1
         with:
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
           severity: info 
           text: Deployment succeeded.
 
-      - name: Notify when check fails
-        if: failure()
+      - name: Notify when deployment fails
+        if: failure() && github.event_name == 'push' && !contains(join(env.COMMIT_MESSAGE, ' '), '#skip')
         uses: rjstone/discord-webhook-notify@v1
         with:
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
