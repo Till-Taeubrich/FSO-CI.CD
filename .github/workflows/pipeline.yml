@@ -16,48 +16,41 @@ jobs:
   simple_deployment_pipeline:
     runs-on: ubuntu-20.04
     steps:
-      #get access to repo
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '16' #use node -v in terminal and insert version in quotes
+          node-version: '16'
       - name: Install dependencies 
         run: npm install  
-
       - name: Check style
         run: npm run eslint
-
-      - name: Build
+      - name: build
         run: npm run build
-
-      - name: Test
+      - name: test
         run: npm run test
-
-      - name: E2E-tests
+      - name: e2e tests
+        uses: cypress-io/github-action@v5
         with:
           command: npm run test:e2e
           start: npm run start-prod
-          wait-on: http://localhost:5000 #add port of backend server
-        uses: cypress-io/github-action@v5
-
+          wait-on: http://localhost:5000
       - uses: actions/checkout@v3
       - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only
         if: github.event_name == 'push' && !contains(join(env.COMMIT_MESSAGE, ' '), '#skip')
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-      - run: flyctl deploy --remote-only
-        #github.event_name == 'push' includes push AND merge events
 
-      - name: Notify when deployment succeeds
-        if: success() && github.event_name == 'push' && !contains(join(env.COMMIT_MESSAGE, ' '), '#skip')
+      - name: Notify when check succeeds
+        if: success()
         uses: rjstone/discord-webhook-notify@v1
         with:
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
           severity: info 
           text: Deployment succeeded.
 
-      - name: Notify when deployment fails
-        if: failure() && github.event_name == 'push' && !contains(join(env.COMMIT_MESSAGE, ' '), '#skip')
+      - name: Notify when check fails
+        if: failure()
         uses: rjstone/discord-webhook-notify@v1
         with:
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
