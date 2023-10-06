@@ -16,27 +16,28 @@ jobs:
   simple_deployment_pipeline:
     runs-on: ubuntu-20.04
     steps:
+      #get access to repo
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '' #use node -v in terminal and insert version in quotes
       - name: Install dependencies 
         run: npm install  
       - name: Check style
         run: npm run eslint
-      - name: build
+      - name: Build
         run: npm run build
-      - name: test
+      - name: Test
         run: npm run test
-      - name: e2e tests
+      - name: E2E-tests
         uses: cypress-io/github-action@v5
         with:
           command: npm run test:e2e
           start: npm run start-prod
-          wait-on: http://localhost:5000
-      - uses: actions/checkout@v3
+          wait-on: http://localhost: #add port of backend server
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
+        #github.event_name == 'push' includes push AND merge events
         if: github.event_name == 'push' && !contains(join(env.COMMIT_MESSAGE, ' '), '#skip')
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
